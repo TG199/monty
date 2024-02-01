@@ -1,5 +1,8 @@
 #include "monty.h"
-#include <stdio.h>
+#include <string.h>
+
+bus_t bus;
+
 /**
 * main - monty code interpreter
 * @argc: number of arguments
@@ -8,12 +11,11 @@
 */
 int main(int argc, char *argv[])
 {
-	char *content;
+	char *content = NULL;
 	FILE *file;
-	size_t size = 0;
-	ssize_t read_line = 1;
 	stack_t *stack = NULL;
 	unsigned int counter = 0;
+	char buffer[1024];
 
 	if (argc != 2)
 	{
@@ -27,19 +29,24 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
-	while (read_line > 0)
+	while (fgets(buffer, sizeof(buffer), file) != NULL)
 	{
-		content = NULL;
-		read_line = getline(&content, &size, file);
-		bus.content = content;
-		counter++;
-		if (read_line > 0)
+		if (buffer[0] != '\0' && buffer[0] != '\n')
 		{
+			content = (char *)malloc(strlen(buffer) + 1);
+			if (!content)
+			{
+				fprintf(stderr, "Error: malloc failed\n");
+				exit(EXIT_FAILURE);
+			}
+			strcpy(content, buffer);
+			bus.content = content;
+			counter++;
 			execute(content, &stack, counter, file);
+
+			free(content);
 		}
-		free(content);
 	}
-	free_stack(stack);
 	fclose(file);
 return (0);
 }
